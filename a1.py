@@ -1,65 +1,71 @@
-# Simple Rule-Based Expert System for Medical Diagnosis
+# Define a list of rules, where each rule is a dictionary.
+# Each rule maps a set of symptoms ('if') to a diagnosis ('then').
+rules = [
+    {"if": {"fever", "cough"}, "then": "flu"},
+    {"if": {"fever", "rash"}, "then": "measles"},
+    {"if": {"headache", "nausea"}, "then": "migraine"},
+    {"if": {"sneezing", "runny nose"}, "then": "cold"},
+    {"if": {"fever", "cough", "difficulty breathing"}, "then": "COVID-19"},
+    {"if": {"sore throat", "fever"}, "then": "strep throat"},
+    {"if": {"fatigue", "muscle pain"}, "then": "influenza"},
+    {"if": {"itchy eyes", "sneezing"}, "then": "allergy"},
+]
 
-# Define the knowledge base: rules as functions that check symptoms and return diagnosis
-def rule_flu(facts):
-    # Rule: If fever and cough and body ache -> Flu
-    if facts.get('fever') and facts.get('cough') and facts.get('body_ache'):
-        return "You may have the flu."
-    return None
+# Inference Engine: Checks which rules match the user's symptoms.
+def diagnose(symptoms):
+    matched_diseases = []     # List to store possible diagnoses
+    explanations = []         # List to store matched rule explanations
 
-def rule_cold(facts):
-    # Rule: If cough and sneezing and no fever -> Common Cold
-    if facts.get('cough') and facts.get('sneezing') and not facts.get('fever'):
-        return "You may have a common cold."
-    return None
-
-def rule_allergy(facts):
-    # Rule: If sneezing and itchy_eyes and no fever -> Allergy
-    if facts.get('sneezing') and facts.get('itchy_eyes') and not facts.get('fever'):
-        return "You may have an allergy."
-    return None
-
-def rule_malaria(facts):
-    # Rule: If fever and chills and sweating -> Malaria
-    if facts.get('fever') and facts.get('chills') and facts.get('sweating'):
-        return "You may have malaria."
-    return None
-
-# List of all rules in the expert system
-rules = [rule_flu, rule_cold, rule_allergy, rule_malaria]
-
-def get_user_input():
-    """
-    Ask the user about symptoms and return facts as a dictionary.
-    """
-    facts = {}
-    print("Please answer the following questions with yes or no:")
-    facts['fever'] = input("Do you have a fever? ").lower() == 'yes'
-    facts['cough'] = input("Do you have a cough? ").lower() == 'yes'
-    facts['body_ache'] = input("Do you have body aches? ").lower() == 'yes'
-    facts['sneezing'] = input("Are you sneezing? ").lower() == 'yes'
-    facts['itchy_eyes'] = input("Do you have itchy eyes? ").lower() == 'yes'
-    facts['chills'] = input("Do you have chills? ").lower() == 'yes'
-    facts['sweating'] = input("Are you sweating a lot? ").lower() == 'yes'
-    return facts
-
-def infer(facts):
-    """
-    Apply each rule on the facts.
-    Return the first matching diagnosis or a default message.
-    """
+    # Loop through all predefined rules
     for rule in rules:
-        result = rule(facts)
-        if result is not None:
-            return result
-    return "Sorry, no diagnosis could be made based on the symptoms."
+        # Check if all symptoms in the rule are present in user input
+        if rule["if"].issubset(symptoms):
+            # Add corresponding disease to the matched list
+            matched_diseases.append(rule["then"])
+            # Save explanation for this match
+            explanations.append(f"Rule matched: IF {', '.join(rule['if'])} THEN {rule['then']}")
 
+    # Return the list of matched diseases and explanations
+    return matched_diseases, explanations
+
+# Function to collect user symptoms interactively
+def get_user_symptoms():
+    print("Enter your symptoms one by one. Type 'done' when finished:")
+    symptoms = set()  # Use a set to avoid duplicate symptoms
+
+    while True:
+        symptom = input("Symptom: ").strip().lower()  # Clean and standardize input
+        if symptom == "done":
+            break  # Stop input collection
+        if symptom:  # Only add non-empty input
+            symptoms.add(symptom)
+
+    return symptoms  # Return the set of entered symptoms
+
+# Main function: Coordinates the interaction and diagnosis process
 def main():
-    print("Welcome to the simple Medical Diagnosis Expert System!")
-    facts = get_user_input()
-    diagnosis = infer(facts)
-    print("\nDiagnosis:")
-    print(diagnosis)
+    print("\n Welcome to the Medical Expert System \n")
+    user_symptoms = get_user_symptoms()  # Collect symptoms from user
+    
+    if not user_symptoms:
+        print("\n️ No symptoms entered. Exiting.")  # Exit if no input
+        return
 
+    diagnoses, explanations = diagnose(user_symptoms)  # Perform diagnosis
+
+    print("\n Diagnosis Result:")
+    if diagnoses:
+        # Display each matched disease
+        for i, disease in enumerate(diagnoses):
+            print(f" - {disease}")
+        print("\n🧾 Explanation:")
+        # Display each matched rule that led to a diagnosis
+        for explanation in explanations:
+            print(f" * {explanation}")
+    else:
+        # Inform user if no matching rules were found
+        print("No diagnosis could be made based on the given symptoms.")
+
+# Entry point: Starts the program when run as a script
 if __name__ == "__main__":
     main()
